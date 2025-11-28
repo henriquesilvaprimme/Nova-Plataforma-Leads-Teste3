@@ -10,6 +10,29 @@ export const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const getFirebaseErrorMessage = (errorCode: string) => {
+    switch (errorCode) {
+      case 'auth/invalid-email':
+        return 'O e-mail digitado é inválido.';
+      case 'auth/user-disabled':
+        return 'Este usuário foi desativado.';
+      case 'auth/user-not-found':
+        return 'Usuário não encontrado. Verifique o e-mail ou cadastre-se.';
+      case 'auth/wrong-password':
+        return 'Senha incorreta.';
+      case 'auth/email-already-in-use':
+        return 'Este e-mail já está cadastrado. Tente fazer login.';
+      case 'auth/weak-password':
+        return 'A senha deve ter pelo menos 6 caracteres.';
+      case 'auth/operation-not-allowed':
+        return 'O login por e-mail/senha não está ativado no Firebase Console.';
+      case 'auth/too-many-requests':
+        return 'Muitas tentativas falhas. Tente novamente mais tarde.';
+      default:
+        return 'Ocorreu um erro inesperado. Tente novamente.';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -22,7 +45,9 @@ export const Login: React.FC = () => {
         await createUserWithEmailAndPassword(auth, email, password);
       }
     } catch (err: any) {
-      setError(err.message.includes('auth/') ? 'Credenciais inválidas ou erro no servidor.' : err.message);
+      console.error("Firebase Auth Error:", err.code, err.message);
+      const message = getFirebaseErrorMessage(err.code);
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -43,8 +68,9 @@ export const Login: React.FC = () => {
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 flex items-center">
-            <span className="font-medium mr-1">Erro:</span> {error}
+          <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100 flex items-start">
+             <span className="font-bold mr-2">Erro:</span> 
+             <span>{error}</span>
           </div>
         )}
 
@@ -77,6 +103,9 @@ export const Login: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
+            {!isLogin && (
+              <p className="text-xs text-slate-400 mt-1">Mínimo de 6 caracteres.</p>
+            )}
           </div>
 
           <button
@@ -84,13 +113,16 @@ export const Login: React.FC = () => {
             disabled={loading}
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg shadow-lg shadow-indigo-500/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {loading ? 'Carregando...' : (isLogin ? 'Entrar' : 'Criar Conta')}
+            {loading ? 'Processando...' : (isLogin ? 'Entrar' : 'Criar Conta')}
           </button>
         </form>
 
         <div className="mt-6 text-center">
           <button
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setError('');
+            }}
             className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
           >
             {isLogin ? 'Não tem uma conta? Cadastre-se' : 'Já tem uma conta? Entrar'}
