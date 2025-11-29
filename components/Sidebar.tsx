@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, Settings, LogOut, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Users, Settings, LogOut, BarChart3, RotateCcw } from 'lucide-react';
 
 interface SidebarProps {
   currentPage: string;
@@ -48,10 +48,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onNavigate, onLog
       <div className="p-4 border-t border-slate-800">
         <button
           onClick={onLogout}
-          className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-red-900/20 hover:text-red-400 transition-colors"
+          className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-red-400 transition-colors"
+          title="Limpar dados e reiniciar"
         >
-          <LogOut size={20} />
-          <span className="font-medium">Sair</span>
+          <RotateCcw size={20} />
+          <span className="font-medium">Resetar Demo</span>
         </button>
       </div>
     </div>
