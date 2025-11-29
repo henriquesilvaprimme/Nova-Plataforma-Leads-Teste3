@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { HashRouter } from 'react-router-dom';
-import { onAuthStateChanged, User } from 'firebase/auth';
 import { Plus } from 'lucide-react';
 
-import { auth } from './firebaseConfig';
-import { Login } from './pages/Login';
 import { Sidebar } from './components/Sidebar';
 import { Dashboard } from './pages/Dashboard';
 import { Leads } from './pages/Leads';
@@ -12,28 +9,22 @@ import { LeadModal } from './components/LeadModal';
 import { leadService } from './services/leadService';
 import { Lead, LeadStatus } from './types';
 
+// Mock user interface since we removed firebase auth types
+interface MockUser {
+  email: string;
+}
+
 function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Usuário "logado" automaticamente
+  const [user, setUser] = useState<MockUser | null>({ email: 'admin@demo.com' });
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [leads, setLeads] = useState<Lead[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Auth Listener
+  // Initial Load
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-    return () => unsubscribe();
+    fetchLeads();
   }, []);
-
-  // Fetch Data Listener
-  useEffect(() => {
-    if (user) {
-      fetchLeads();
-    }
-  }, [user]);
 
   const fetchLeads = async () => {
     try {
@@ -75,17 +66,12 @@ function App() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Login />;
-  }
+  const handleLogout = () => {
+    if(window.confirm("Deseja resetar os dados de demonstração e recarregar?")) {
+      localStorage.removeItem('nexus_leads');
+      window.location.reload();
+    }
+  };
 
   return (
     <HashRouter>
@@ -93,17 +79,19 @@ function App() {
         <Sidebar 
           currentPage={currentPage} 
           onNavigate={setCurrentPage} 
-          onLogout={() => auth.signOut()}
+          onLogout={handleLogout}
         />
 
         <main className="flex-1 md:ml-64 p-4 md:p-8 overflow-y-auto h-screen">
-          <header className="flex justify-between items-center mb-8">
+          <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
               <h2 className="text-2xl font-bold text-slate-800">
-                {currentPage === 'dashboard' ? 'Visão Geral' : 'Gestão de Leads'}
+                {currentPage === 'dashboard' ? 'Visão Geral' : 
+                 currentPage === 'leads' ? 'Gestão de Leads' : 
+                 currentPage === 'reports' ? 'Relatórios' : 'Configurações'}
               </h2>
               <p className="text-slate-500 text-sm mt-1">
-                Bem-vindo de volta, {user.email?.split('@')[0]}
+                Bem-vindo de volta, {user?.email.split('@')[0]} (Modo Demo)
               </p>
             </div>
 
@@ -129,9 +117,12 @@ function App() {
               />
             )}
             {(currentPage !== 'dashboard' && currentPage !== 'leads') && (
-               <div className="flex flex-col items-center justify-center h-64 text-slate-400 bg-white rounded-xl border border-slate-200">
-                  <p className="text-lg">Módulo em desenvolvimento</p>
-                  <p className="text-sm">Em breve funcionalidades de {currentPage}</p>
+               <div className="flex flex-col items-center justify-center h-64 text-slate-400 bg-white rounded-xl border border-slate-200 shadow-sm">
+                  <div className="p-4 bg-slate-50 rounded-full mb-4">
+                    <Plus size={32} className="text-slate-300" />
+                  </div>
+                  <p className="text-lg font-medium text-slate-600">Módulo em desenvolvimento</p>
+                  <p className="text-sm mt-1">As funcionalidades de {currentPage} estarão disponíveis em breve.</p>
                </div>
             )}
           </div>
